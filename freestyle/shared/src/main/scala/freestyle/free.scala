@@ -4,6 +4,10 @@ import scala.annotation.{compileTimeOnly, StaticAnnotation}
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 
+trait FreeModuleLike {
+  type Op[A]
+}
+
 @compileTimeOnly("enable macro paradise to expand @free macro annotations")
 class free extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro free.impl
@@ -112,7 +116,7 @@ object free {
 
     def mkRaiseTo( effectName: TypeName, effTTs: List[TypeDef], requests: List[Request] ): ClassDef = {
       q"""
-       class RaiseTo[$LL[_], ..$effTTs](implicit I: Inject[$OP, $LL])
+       class To[$LL[_], ..$effTTs](implicit I: Inject[$OP, $LL])
           extends $effectName[$LL, ..${effTTs.map(_.name)}] {
             ..${requests.map(_.raiser )}
           }
@@ -121,8 +125,8 @@ object free {
 
     def mkRaiseMethod( eff: TypeName, effTTs: List[TypeDef]): DefDef =
       q"""
-        implicit def raiseTo[$LL[_], ..$effTTs](implicit I: Inject[$OP, $LL]):
-            $eff[$LL, ..${effTTs.map(_.name)}] = new RaiseTo[$LL, ..$effTTs]
+        implicit def to[$LL[_], ..$effTTs](implicit I: Inject[$OP, $LL]):
+            $eff[$LL, ..${effTTs.map(_.name)}] = new To[$LL, ..$effTTs]
       """
 
     def mkHandler( effTTs: List[TypeDef], requests: List[Request]): ClassDef =
